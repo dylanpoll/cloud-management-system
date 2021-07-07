@@ -30,7 +30,7 @@ while True:
     with open('macAddresses.txt', 'r') as macFile:
                 print('checking who is home...')
                 for line in macFile:
-                    if 'B6:B0:E2:FF:46:DA' in line:  #i use **:**:**:**:**:** to replace a real MAC address, replace with you own
+                    if '**:**:**:**:**:**' in line:  #i use **:**:**:**:**:** to replace a real MAC address, replace with you own
                         postDylan = "{\r\n    \"name\": \"Dylan\",\r\n    \"isHome\": \"Yes\"\r\n}"
                         print('Dylan is here') #change this to whatever you want to happen
                         dylan = 0
@@ -45,7 +45,7 @@ while True:
     time.sleep(2)
     with open('macAddresses.txt', 'r') as macFile:
                 for line in macFile:
-                    if 'DE:F4:CA:B1:99:07' in line:#i use **:**:**:**:**:** to replace a real MAC address, replace with you own
+                    if '**:**:**:**:**:**' in line:#i use **:**:**:**:**:** to replace a real MAC address, replace with you own
                         postLewis = "{\r\n    \"name\": \"Lewis\",\r\n    \"isHome\": \"Yes\"\r\n}"
                         print('Lewis is here') #change this to whatever you want to happen
                         lewis = 0
