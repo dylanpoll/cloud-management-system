@@ -1,0 +1,8 @@
+https://sensorsiot.github.io/IOTstack/Getting-Started/
+
+sudo apt install -y curl
+curl -fsSL https://raw.githubusercontent.com/SensorsIot/IOTstack/master/install.sh | bash
+cd ~/IOTstack
+./menu.sh
+cd ~/IOTstack
+docker-compose up -d

@@ -1,0 +1,269 @@
+sudo su root
+cd 
+apt update -y
+apt upgrade -y
+apt install nodejs -y
+apt install npm -y
+apt install build-essential git -y
+apt install libpcre3-dev libssl-dev zlib1g-dev -y
+git clone https://github.com/arut/nginx-rtmp-module.git
+git clone https://github.com/nginx/nginx.git
+cd nginx
+./auto/configure --add-module=../nginx-rtmp-module
+make
+make install
+rm /usr/local/nginx/conf/nginx.conf
+nano /usr/local/nginx/conf/nginx.conf
+
+COPY BELOW
+
+user www-data;
+worker_processes  auto;
+pid /run/nginx.pid;
+
+events {
+worker_connections  1024;
+}
+rtmp { 
+    server { 
+        listen 1935; 
+	chunk_size 4096;
+        application live { 
+            live on; 
+            interleave on;
+            hls on; 
+            hls_path /tmp/hls; 
+            hls_fragment 15s; 
+
+            dash on; 
+            dash_path /tmp/dash; 
+            dash_fragment 15s; 
+            #pull rtmp://live.example.for:pulling/fromApublicStream name=tv2 static;
+        } 
+    } 
+} 
+ 
+http { 
+    default_type application/octet-stream;
+ 
+    server { 
+        listen 8080; 
+        location / { 
+
+            # Disable cache
+            add_header 'Cache-Control' 'no-cache';
+
+            # CORS setup
+            add_header 'Access-Control-Allow-Origin' '*' always;
+            add_header 'Access-Control-Expose-Headers' 'Content-Length';
+
+            # allow CORS preflight requests
+            if ($request_method = 'OPTIONS') {
+                add_header 'Access-Control-Allow-Origin' '*';
+                add_header 'Access-Control-Max-Age' 1728000;
+                add_header 'Content-Type' 'text/plain charset=UTF-8';
+                add_header 'Content-Length' 0;
+                return 204;
+            }
+
+            types {
+                application/dash+xml mpd;
+                application/vnd.apple.mpegurl m3u8;
+                video/mp2t ts;
+                text/html html;
+            }
+            root /tmp;  
+        } 
+    }
+ 
+    types {
+        application/vnd.apple.mpegurl m3u8;
+        video/mp2t ts;
+        text/html html;
+        application/dash+xml mpd;
+    } 
+}
+
+END FOR COPY
+
+/usr/local/nginx/sbin/nginx -s stop
+/usr/local/nginx/sbin/nginx -t
+/usr/local/nginx/sbin/nginx
+cd /tmp/
+chmod 777 dash
+chmod 777 hls
+
+chmod a+rx /usr/local/nginx/sbin/nginx
+sudo ln -s /usr/local/nginx/sbin/nginx /usr/local/bin
+
+nano /lib/systemd/system/nginx.service
+
+[Unit]
+Description=The NGINX HTTP and reverse proxy server
+After=syslog.target network-online.target remote-fs.target nss-lookup.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+PIDFile=/run/nginx.pid
+ExecStartPre=/usr/local/nginx/sbin/nginx -t
+ExecStart=/usr/local/nginx/sbin/nginx
+ExecReload=/usr/local/nginx/sbin/nginx -s reload
+ExecStop=/bin/kill -s QUIT $MAINPID
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+
+chmod 644 /lib/systemd/system/nginx.service
+systemctl daemon-reload
+systemctl enable nginx.service
+
+now this will run on startup.
+
+
+
+========================SOMETHING IN '=' IS NOT CORRECT YET
+cd Desktop
+nano startstream.sh
+copy below into and save
+
+#!/bin/bash
+ffmpeg -ar 44100 -ac 2 -acodec pcm_s16le -f s16le -ac 2 -i /dev/zero -f v4l2 -thread_queue_size 10240 -codec:v h264 -s 1920x1080 -i /dev/video0 -codec:v copy -codec:a copy -f flv rtmp://192.168.2.230/live/cam
+
+chmod a+rx /home/pi/Desktop/startstream.sh
+sudo ln -s /home/pi/Desktop/startstream.sh /usr/local/bin
+
+nano /lib/systemd/system/startstream.service
+copy below and save
+
+[Unit]
+Description=Converting RTSP to MJPEG
+[Service]
+ExecStart=/usr/bin/startstream.sh
+User=root
+[Install]
+WantedBy=multi-user.target
+
+sudo chmod 644 /lib/systemd/system/startstream.service
+sudo systemctl daemon-reload
+sudo systemctl enable startstream.service
+
+nano /etc/init.d/startstream
+copy content
+
+#! /bin/sh
+# /etc/init.d/startstream
+
+### BEGIN INIT INFO
+# Provides:          startstream
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Simple script to start a program at boot
+# Description:       A simple script from www.stuffaboutcode.com which will start / stop a program a boot / shutdown.
+### END INIT INFO
+
+# If you want a command to always run, put it here
+
+# Carry out specific functions when asked to by the system
+case "$1" in
+  start)
+    echo "Starting stream"
+    # run application you want to start
+    sleep 4m
+    /usr/local/bin/startstream.sh
+    ;;
+  stop)
+    echo "Stopping stream"
+    # kill application you want to stop
+    killall ffmpeg
+    ;;
+  *)
+    echo "Usage: /etc/init.d/startstream {start|stop}"
+    exit 1
+    ;;
+esac
+
+exit 0 
+
+END COPY
+
+chmod 755 /etc/init.d/startstream
+update-rc.d startstream defaults
+
+info : https://raspberrypi.stackexchange.com/questions/8734/execute-script-on-start-up
+and : https://www.stuffaboutcode.com/2012/06/raspberry-pi-run-program-at-start-up.html
+
+the webcam will now run on startup so long as it is plugged in.
+
+
+===============================================================================
+
+
+cd into the same folder this is in and do
+change src/app.js camera link to but with your IP ->
+http://***.***.*.***:8080/live/cam
+while in the same folder
+npm install
+npm start
+go to browser page 
+http://***.***.*.***:3000
+
+make website run on startup
+sudo npm install -g pm2
+pm2 startup systemd
+
+COPY THE LINE IT PRODUCES IN THE TERMINAL AFTER THE ABOVE COMMAND
+
+
+copy and past the command pm2 creates
+run this inside the folder containing this
+pm2 start --name iotcloud npm -- start
+pm2 start --name express node -- app.js
+pm2 save
+
+https://medium.com/@devesu/how-to-start-reactjs-application-with-pm2-as-a-service-linux-macos-854d5df3fcf1  -> more info on pm2
+
+next FTP setup
+apt install vsftpd -y
+nano /etc/vsftpd.conf
+
+add anywhere in file 
+pasv_enable=NO
+
+nano /etc/ssh/sshd_config
+
+add this anywhere
+PermitRootLogin yes
+
+sudo nano /etc/ftpusers
+put a # in front of root
+
+/etc/init.d/ssh restart
+
+change root password -> eventually use SSH key
+sudo passwd root
+
+https://linuxhint.com/configure-ftp-tls-ubuntu/ -> guide is for ubuntu but works for raspbian
+
+apt install screen -y
+
+firewall
+apt install ufw -y
+ufw allow 8080
+ufw allow 22
+ufw allow 21
+ufw allow ssh
+ufw allow 20
+ufw allow 3000
+ufw allow 9001
+ufw allow 445
+ufw allow 80
+ufw allow 1935
+ufw allow ftp
+ufw enable
+
+
+
