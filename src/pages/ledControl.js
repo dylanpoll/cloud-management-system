@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
 import {PageTitleText} from '../components/Layout';
-import {REACT_APP_REST} from '../App';
+import {EXPRESS_PORT, HOST_SYSTEM} from '../App';
 
 const Button = styled.button`
 background-color: black;
@@ -53,5 +53,5 @@ export function LedControll() {
 
 export function LedController(type){
     console.log(type);
-    axios.get(REACT_APP_REST+"/solid/"+type).then((response) => {console.log(response.data)})
+    axios.get(HOST_SYSTEM+EXPRESS_PORT+"/solid/"+type).then((response) => {console.log(response.data)})
 }

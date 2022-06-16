@@ -1,5 +1,5 @@
 {
-  "name": "dev-dylan",
+  "name": "dev-dylans-pi-cloud",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -9,10 +9,7 @@
     "@testing-library/user-event": "^12.1.10",
     "axios": "^0.21.1",
     "boostrap": "^2.0.0",
-    "cors": "^2.8.5",
     "discord.js": "^12.5.3",
-    "dotenv": "^8.6.0",
-    "moment": "^2.29.1",
     "mongoose": "^5.12.8",
     "node-fetch": "^2.6.1",
     "passport-google-oauth": "^2.0.0",
@@ -29,13 +26,21 @@
     "react-scroll": "^1.8.1",
     "styled-components": "^5.2.0",
     "video.js": "^7.11.8",
-    "web-vitals": "^0.2.4"
+    "web-vitals": "^0.2.4",
+    "body-parser": "^1.20.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "moment": "^2.29.3",
+    "pg": "^8.7.3"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "sshexpress":"node expressWOL.js",
+    "pgepress":"node expressPG.js"
   },
   "eslintConfig": {
     "extends": [
