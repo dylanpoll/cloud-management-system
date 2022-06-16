@@ -13,7 +13,7 @@ I currently plan to containerize and submit docker images to dockerhub and re de
 
 
 
-====================== this is some basic guidance for self deploying this =======================
+====================== this is some basic guidance for self deploying this, I will update the markuptext, it was not meant to be seen this way.  =======================
 
 sudo apt update -y
 sudo apt upgrade -y
